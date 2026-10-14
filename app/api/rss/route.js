@@ -1,24 +1,52 @@
-// Server-side RSS proxy — fetches multiple feeds, merges and sorts by date
+// Server-side RSS proxy — nutzt rss2json.com als Mittler, damit Feeds nicht blockiert werden
 const FEEDS = [
-  'https://adventisten.de/aktuelles/news/rss',
-  'https://www.apd.info/news/rss',
+  { url: 'https://adventisten.de/aktuelles/news/rss', label: 'Adventisten' },
+  { url: 'https://www.apd.info/news/rss', label: 'APD' },
 ];
 
-async function fetchFeed(url) {
+const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+
+async function fetchViaRss2Json(feedUrl, label) {
   try {
-    const res = await fetch(url, {
+    const apiUrl = RSS2JSON + encodeURIComponent(feedUrl) + '&count=10';
+    const res = await fetch(apiUrl, {
+      headers: { 'Accept': 'application/json' },
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (data.status !== 'ok' || !Array.isArray(data.items)) return [];
+    return data.items.map(item => ({
+      title: item.title || '',
+      link: item.link || item.url || '',
+      pubDate: item.pubDate || '',
+      category: (Array.isArray(item.categories) && item.categories[0]) || label,
+      desc: item.description || item.content || '',
+      img: item.thumbnail || item.enclosure?.link || '',
+      source: label,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function fetchDirectFeed(feedUrl, label) {
+  try {
+    const res = await fetch(feedUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/xml, application/rss+xml, application/xml, */*',
-        'Accept-Language': 'de-DE,de;q=0.9',
+        'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8',
         'Cache-Control': 'no-cache',
+        'Referer': 'https://www.google.com/',
       },
       next: { revalidate: 300 },
     });
-    if (!res.ok) return null;
-    return await res.text();
+    if (!res.ok) return [];
+    const xml = await res.text();
+    return extractItems(xml, label);
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -47,21 +75,26 @@ function extractItems(xml, sourceLabel) {
 }
 
 export async function GET() {
-  const results = await Promise.all(
-    FEEDS.map((url, i) =>
-      fetchFeed(url).then(xml => xml ? extractItems(xml, i === 0 ? 'Adventisten' : 'APD') : [])
-    )
+  let allItems = [];
+  const rss2jsonResults = await Promise.all(
+    FEEDS.map(f => fetchViaRss2Json(f.url, f.label))
   );
-  const all = results.flat();
+  allItems = rss2jsonResults.flat();
 
-  // Sort by pubDate descending
-  all.sort((a, b) => {
+  if (allItems.length === 0) {
+    const directResults = await Promise.all(
+      FEEDS.map(f => fetchDirectFeed(f.url, f.label))
+    );
+    allItems = directResults.flat();
+  }
+
+  allItems.sort((a, b) => {
     const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
     const db = b.pubDate ? new Date(b.pubDate).getTime() : 0;
     return db - da;
   });
 
-  const items = all.slice(0, 15).map(a => `
+  const items = allItems.slice(0, 15).map(a => `
   <item>
     <title><![CDATA[${a.title}]]></title>
     <link>${a.link}</link>
