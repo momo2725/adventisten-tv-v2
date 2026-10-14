@@ -142,12 +142,7 @@ export default function Home() {
       </div>
 
       <script dangerouslySetInnerHTML={{ __html: `
-        const FEEDS = [
-          { url: 'https://www.apd.info/news/rss',               label: 'APD' },
-          { url: 'https://adventisten.de/aktuelles/news/rss',   label: 'Adventisten' },
-        ];
-        // allorigins liefert JSON mit contents-Feld — Safari-kompatibel
-        const CORS_PROXY = url => 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+        const LOCAL_PROXY = '/api/rss';
         const DISPLAY_MS = 30000;
         const MAX        = 15;
         let articles = [], current = 0, countdownInterval = null;
@@ -218,29 +213,17 @@ export default function Home() {
           }, 1000);
         }
 
-        async function fetchOneFeed(feedUrl) {
-          try {
-            const ctrl = new AbortController();
-            const tid = setTimeout(() => ctrl.abort(), 12000);
-            const res = await fetch(CORS_PROXY(feedUrl), { signal: ctrl.signal });
-            clearTimeout(tid);
-            if (!res.ok) return '';
-            const json = await res.json();
-            return json.contents || '';
-          } catch(e) { return ''; }
-        }
-
         async function fetchFeed() {
-          const xmls = await Promise.all(FEEDS.map(f => fetchOneFeed(f.url)));
-          let all = [];
-          FEEDS.forEach((f, i) => {
-            if (xmls[i] && xmls[i].includes('<item')) {
-              all = all.concat(parseRSSItems(xmls[i], f.label));
-            }
-          });
-          if (all.length === 0) throw new Error('Kein RSS-Inhalt');
-          all.sort((a,b) => (b.rawDate||0) - (a.rawDate||0));
-          return all.slice(0, MAX);
+          const ctrl = new AbortController();
+          const tid = setTimeout(() => ctrl.abort(), 15000);
+          const res = await fetch(LOCAL_PROXY, { signal: ctrl.signal });
+          clearTimeout(tid);
+          if (!res.ok) throw new Error('Proxy ' + res.status);
+          const xml = await res.text();
+          if (!xml.includes('<item')) throw new Error('Kein RSS-Inhalt');
+          const items = parseRSSItems(xml, 'News');
+          if (!items.length) throw new Error('Feed leer');
+          return items.slice(0, MAX);
         }
 
         function parseRSSItems(xml, sourceLabel) {
