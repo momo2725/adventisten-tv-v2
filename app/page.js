@@ -2,20 +2,17 @@
 export default function Home() {
   return (
     <>
-      {/* Sarabun — Adventist DACH CI primary typeface */}
       <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
       <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" async></script>
       <style>{`
         *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
         :root {
-          /* Adventist DACH CI — Türkis primary */
-          --ci-tl: #6EC6D1;   /* Türkis Light  */
-          --ci-td: #29B8C5;   /* Türkis Dark   */
-          --ci-gl: #6E6E6E;   /* Grey Light    */
-          --ci-gd: #565655;   /* Grey Dark     */
-          --ci-ol: #F6A231;   /* Orange Light  */
-          --ci-od: #F28B0D;   /* Orange Dark   */
-
+          --ci-tl: #6EC6D1;
+          --ci-td: #29B8C5;
+          --ci-gl: #6E6E6E;
+          --ci-gd: #565655;
+          --ci-ol: #F6A231;
+          --ci-od: #F28B0D;
           --bg:      #0b1214;
           --surface: #111a1c;
           --surface2:#162022;
@@ -28,207 +25,67 @@ export default function Home() {
           --font: 'Sarabun', sans-serif;
         }
         html,body { width:100%; height:100%; background:var(--bg); color:var(--text); font-family:var(--font); overflow:hidden; }
-
-        /* ── TOPBAR – CI Türkis gradient ── */
-        #topbar {
-          position:fixed; top:0; left:0; right:0; z-index:200; height:6px;
-          background: linear-gradient(90deg, var(--ci-td) 0%, var(--ci-tl) 100%);
-        }
-
-        /* ── HEADER ── */
-        #header {
-          position:fixed; top:6px; left:0; right:0; z-index:100;
-          height:70px; background:#080f10;
-          display:flex; align-items:center; padding:0 44px;
-          border-bottom:1px solid var(--border);
-        }
+        #topbar { position:fixed; top:0; left:0; right:0; z-index:200; height:6px; background: linear-gradient(90deg, var(--ci-td) 0%, var(--ci-tl) 100%); }
+        #header { position:fixed; top:6px; left:0; right:0; z-index:100; height:70px; background:#080f10; display:flex; align-items:center; padding:0 44px; border-bottom:1px solid var(--border); }
         .logo-block { display:flex; align-items:center; gap:0; margin-right:36px; }
-        /* CI: Türkis box for logo mark */
-        .logo-box {
-          background: radial-gradient(ellipse at 30% 30%, var(--ci-tl), var(--ci-td));
-          padding:6px 16px;
-          font-family:var(--font); font-weight:800; font-size:28px; color:#fff;
-          letter-spacing:-0.5px; line-height:1;
-        }
-        .logo-sub {
-          font-family:var(--font); font-weight:600; font-size:12px; color:var(--muted);
-          letter-spacing:2px; text-transform:uppercase;
-          padding-left:16px; border-left:1px solid var(--border); margin-left:16px; line-height:1.4;
-        }
+        .logo-box { background: radial-gradient(ellipse at 30% 30%, var(--ci-tl), var(--ci-td)); padding:6px 16px; font-family:var(--font); font-weight:800; font-size:28px; color:#fff; letter-spacing:-0.5px; line-height:1; }
+        .logo-sub { font-family:var(--font); font-weight:600; font-size:12px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; padding-left:16px; border-left:1px solid var(--border); margin-left:16px; line-height:1.4; }
         .header-divider { flex:1; }
-        .live-pill {
-          display:flex; align-items:center; gap:8px;
-          background: linear-gradient(135deg, var(--ci-td), var(--ci-tl));
-          padding:5px 16px; font-family:var(--font); font-weight:700;
-          font-size:12px; letter-spacing:2px; text-transform:uppercase; margin-right:28px;
-        }
+        .live-pill { display:flex; align-items:center; gap:8px; background: linear-gradient(135deg, var(--ci-td), var(--ci-tl)); padding:5px 16px; font-family:var(--font); font-weight:700; font-size:12px; letter-spacing:2px; text-transform:uppercase; margin-right:28px; }
         .live-pill::before { content:''; width:7px; height:7px; border-radius:50%; background:#fff; animation:blink 1.2s ease-in-out infinite; }
         #clock { font-family:var(--font); font-size:22px; font-weight:300; color:var(--muted); letter-spacing:1px; }
-
-        /* ── WEATHER ── */
         #weather-widget { display:flex; align-items:center; gap:12px; margin-right:32px; padding-right:32px; border-right:1px solid var(--border); }
         #weather-icon { font-size:28px; line-height:1; }
         #weather-info { display:flex; flex-direction:column; gap:1px; }
         #weather-temp { font-family:var(--font); font-weight:700; font-size:24px; color:var(--ci-tl); line-height:1; }
         #weather-desc { font-family:var(--font); font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
         #weather-city { font-family:var(--font); font-size:11px; color:var(--ci-gd); letter-spacing:1px; }
-
-        /* ── TICKER BAR ── */
-        #breaking {
-          position:fixed; top:76px; left:0; right:0; z-index:99; height:40px;
-          display:flex; align-items:center;
-          background:var(--surface2); border-bottom:1px solid var(--border); overflow:hidden;
-        }
-        #breaking-label {
-          flex-shrink:0; height:100%; padding:0 20px;
-          display:flex; align-items:center;
-          background: linear-gradient(135deg, var(--ci-td), var(--ci-tl));
-          font-family:var(--font); font-weight:700; font-size:11px;
-          letter-spacing:2px; text-transform:uppercase; white-space:nowrap;
-        }
+        #breaking { position:fixed; top:76px; left:0; right:0; z-index:99; height:40px; display:flex; align-items:center; background:var(--surface2); border-bottom:1px solid var(--border); overflow:hidden; }
+        #breaking-label { flex-shrink:0; height:100%; padding:0 20px; display:flex; align-items:center; background: linear-gradient(135deg, var(--ci-td), var(--ci-tl)); font-family:var(--font); font-weight:700; font-size:11px; letter-spacing:2px; text-transform:uppercase; white-space:nowrap; }
         #ticker-outer { flex:1; overflow:hidden; height:100%; display:flex; align-items:center; }
-        #ticker-track {
-          display:flex; align-items:center; white-space:nowrap;
-          animation:ticker 90s linear infinite;
-          font-family:var(--font); font-size:16px; font-weight:400; color:var(--text2); padding-left:24px;
-        }
+        #ticker-track { display:flex; align-items:center; white-space:nowrap; animation:ticker 90s linear infinite; font-family:var(--font); font-size:16px; font-weight:400; color:var(--text2); padding-left:24px; }
         #ticker-track span { padding:0 32px; }
         #ticker-track .sep { color:var(--ci-td); font-weight:700; padding:0 4px; }
-
-        #countdown-badge {
-          flex-shrink:0; display:flex; align-items:center; gap:6px;
-          padding:0 16px; height:100%; border-left:1px solid var(--border);
-          font-family:var(--font); font-size:12px; color:var(--muted); letter-spacing:1px;
-        }
+        #countdown-badge { flex-shrink:0; display:flex; align-items:center; gap:6px; padding:0 16px; height:100%; border-left:1px solid var(--border); font-family:var(--font); font-size:12px; color:var(--muted); letter-spacing:1px; }
         #countdown-num { font-size:18px; font-weight:700; color:var(--ci-tl); min-width:26px; text-align:center; }
-
-        /* ── STAGE / SLIDES ── */
         #stage { position:fixed; top:116px; bottom:44px; left:0; right:0; overflow:hidden; }
-
-        .slide {
-          position:absolute; inset:0; display:grid; grid-template-columns:3fr 2fr;
-          opacity:0;
-          transform:translateX(24px);
-          transition:opacity var(--transition), transform var(--transition);
-          pointer-events:none;
-        }
+        .slide { position:absolute; inset:0; display:grid; grid-template-columns:3fr 2fr; opacity:0; transform:translateX(24px); transition:opacity var(--transition), transform var(--transition); pointer-events:none; }
         .slide.active { opacity:1; transform:translateX(0); pointer-events:auto; }
         .slide.exit { opacity:0; transform:translateX(-24px); }
-
         .slide-image { position:relative; overflow:hidden; background:#000; }
         .slide-image img { width:100%; height:100%; object-fit:cover; display:block; }
-        /* CI-gradient overlay: Türkis-tinted */
-        .slide-image .img-overlay {
-          position:absolute; inset:0;
-          background:
-            linear-gradient(to right, transparent 50%, rgba(11,18,20,0.97) 100%),
-            linear-gradient(to top, rgba(0,30,34,0.6) 0%, transparent 45%);
-        }
-        .slide-image .no-img {
-          width:100%; height:100%;
-          background: radial-gradient(ellipse at 40% 40%, var(--surface3), var(--bg));
-          display:flex; align-items:center; justify-content:center;
-        }
+        .slide-image .img-overlay { position:absolute; inset:0; background: linear-gradient(to right, transparent 50%, rgba(11,18,20,0.97) 100%), linear-gradient(to top, rgba(0,30,34,0.6) 0%, transparent 45%); }
+        .slide-image .no-img { width:100%; height:100%; background: radial-gradient(ellipse at 40% 40%, var(--surface3), var(--bg)); display:flex; align-items:center; justify-content:center; }
         .no-img svg { opacity:0.12; }
-
-        /* CI Türkis category pill */
-        .img-category {
-          position:absolute; top:28px; left:28px;
-          background: linear-gradient(135deg, var(--ci-td), var(--ci-tl));
-          font-family:var(--font); font-weight:700; font-size:12px;
-          letter-spacing:2px; text-transform:uppercase; padding:5px 14px;
-        }
-        .img-counter {
-          position:absolute; bottom:28px; left:28px;
-          font-family:var(--font); font-size:12px; font-weight:300;
-          color:rgba(255,255,255,0.45); letter-spacing:2px;
-        }
-
-        /* QR bottom-right */
-        .slide-qr {
-          position:absolute; bottom:20px; right:20px;
-          background:#fff; padding:6px; border-radius:4px;
-          width:80px; height:80px; display:flex; align-items:center; justify-content:center;
-        }
+        .img-category { position:absolute; top:28px; left:28px; background: linear-gradient(135deg, var(--ci-td), var(--ci-tl)); font-family:var(--font); font-weight:700; font-size:12px; letter-spacing:2px; text-transform:uppercase; padding:5px 14px; }
+        .img-counter { position:absolute; bottom:28px; left:28px; font-family:var(--font); font-size:12px; font-weight:300; color:rgba(255,255,255,0.45); letter-spacing:2px; }
+        .slide-qr { position:absolute; bottom:20px; right:20px; background:#fff; padding:6px; border-radius:4px; width:80px; height:80px; display:flex; align-items:center; justify-content:center; }
         .slide-qr canvas, .slide-qr img { width:68px!important; height:68px!important; }
-
-        /* Content panel — CI dark teal tint */
-        .slide-content {
-          background: radial-gradient(ellipse at 80% 20%, var(--surface3) 0%, var(--surface) 60%);
-          display:flex; flex-direction:column; justify-content:center;
-          padding:52px 56px; position:relative; border-left:1px solid var(--border);
-        }
-        /* CI accent bar top */
-        .slide-content::before {
-          content:''; position:absolute; top:0; left:0; right:0; height:3px;
-          background: linear-gradient(90deg, var(--ci-td), var(--ci-tl));
-        }
-        .slide-category {
-          font-family:var(--font); font-weight:700; font-size:13px;
-          letter-spacing:3px; text-transform:uppercase; color:var(--ci-td); margin-bottom:18px;
-        }
-        .slide-title {
-          font-family:var(--font); font-weight:800;
-          font-size:clamp(34px,3.2vw,54px); line-height:1.1; color:#fff;
-          margin-bottom:22px; letter-spacing:-0.3px;
-        }
-        .slide-desc {
-          font-family:var(--font); font-size:17px; font-weight:300; line-height:1.7;
-          color:var(--text2);
-          display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
-          margin-bottom:28px;
-        }
-        .slide-date-block {
-          margin-top:auto; padding-top:22px;
-          border-top:1px solid var(--border);
-          display:flex; flex-direction:column; gap:4px;
-        }
-        .slide-date-label {
-          font-family:var(--font); font-size:10px; font-weight:700;
-          letter-spacing:2px; text-transform:uppercase; color:var(--muted);
-        }
-        .slide-date-value {
-          font-family:var(--font); font-size:19px; font-weight:600; color:var(--ci-tl);
-          letter-spacing:0.3px;
-        }
-        .slide-source-badge {
-          display:inline-block; margin-top:8px;
-          background:var(--surface3); border:1px solid var(--border);
-          padding:3px 10px; font-family:var(--font); font-size:10px;
-          letter-spacing:2px; text-transform:uppercase; color:var(--muted); border-radius:2px;
-        }
-
-        /* ── PROGRESS + STATUSBAR ── */
+        .slide-content { background: radial-gradient(ellipse at 80% 20%, var(--surface3) 0%, var(--surface) 60%); display:flex; flex-direction:column; justify-content:center; padding:52px 56px; position:relative; border-left:1px solid var(--border); }
+        .slide-content::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: linear-gradient(90deg, var(--ci-td), var(--ci-tl)); }
+        .slide-category { font-family:var(--font); font-weight:700; font-size:13px; letter-spacing:3px; text-transform:uppercase; color:var(--ci-td); margin-bottom:18px; }
+        .slide-title { font-family:var(--font); font-weight:800; font-size:clamp(34px,3.2vw,54px); line-height:1.1; color:#fff; margin-bottom:22px; letter-spacing:-0.3px; }
+        .slide-desc { font-family:var(--font); font-size:17px; font-weight:300; line-height:1.7; color:var(--text2); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; margin-bottom:28px; }
+        .slide-date-block { margin-top:auto; padding-top:22px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:4px; }
+        .slide-date-label { font-family:var(--font); font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
+        .slide-date-value { font-family:var(--font); font-size:19px; font-weight:600; color:var(--ci-tl); letter-spacing:0.3px; }
+        .slide-source-badge { display:inline-block; margin-top:8px; background:var(--surface3); border:1px solid var(--border); padding:3px 10px; font-family:var(--font); font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); border-radius:2px; }
         #progress-bar { position:fixed; bottom:44px; left:0; right:0; z-index:100; height:3px; background:var(--surface3); }
         #progress-fill { height:100%; background: linear-gradient(90deg, var(--ci-td), var(--ci-tl)); width:0%; transition:width linear; }
-
-        #statusbar {
-          position:fixed; bottom:0; left:0; right:0; z-index:100;
-          height:44px; background:#080f10; border-top:1px solid var(--border);
-          display:flex; align-items:center; padding:0 44px; gap:24px;
-        }
+        #statusbar { position:fixed; bottom:0; left:0; right:0; z-index:100; height:44px; background:#080f10; border-top:1px solid var(--border); display:flex; align-items:center; padding:0 44px; gap:24px; }
         .status-label { font-family:var(--font); font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--ci-td); }
         .status-feed { font-family:var(--font); font-size:13px; font-weight:300; color:var(--muted); }
         .status-spacer { flex:1; }
         #dot-strip { display:flex; align-items:center; gap:6px; }
         .sdot { width:6px; height:6px; border-radius:50%; background:var(--surface3); transition:all 0.3s; }
         .sdot.active { background:var(--ci-td); width:18px; border-radius:3px; }
-
-        /* ── FS BUTTON ── */
         #fs-btn { position:fixed; top:20px; right:14px; z-index:300; background:none; border:none; cursor:pointer; opacity:0.25; transition:opacity 0.2s; padding:4px; }
         #fs-btn:hover { opacity:0.8; }
         #fs-btn svg { fill:#fff; width:20px; height:20px; }
-
-        /* ── LOADING ── */
         #loading { position:fixed; inset:0; z-index:300; background:#080f10; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; }
-        .logo-box-lg {
-          background: radial-gradient(ellipse at 30% 30%, var(--ci-tl), var(--ci-td));
-          padding:12px 26px; font-family:var(--font); font-weight:800; font-size:44px; color:#fff; letter-spacing:-1px;
-        }
+        .logo-box-lg { background: radial-gradient(ellipse at 30% 30%, var(--ci-tl), var(--ci-td)); padding:12px 26px; font-family:var(--font); font-weight:800; font-size:44px; color:#fff; letter-spacing:-1px; }
         .spinner { width:36px; height:36px; border:2px solid var(--surface3); border-top-color:var(--ci-td); border-radius:50%; animation:spin 0.9s linear infinite; }
         #loading p { font-family:var(--font); font-size:13px; font-weight:300; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
-
-        /* ── ANIMATIONS ── */
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
         @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
         @keyframes spin { to{transform:rotate(360deg)} }
@@ -285,12 +142,15 @@ export default function Home() {
       </div>
 
       <script dangerouslySetInnerHTML={{ __html: `
-        const LOCAL_PROXY = '/api/rss';
-        const DISPLAY_MS  = 30000;
-        const MAX         = 15;
+        const FEEDS = [
+          { url: 'https://www.apd.info/news/rss',               label: 'APD' },
+          { url: 'https://adventisten.de/aktuelles/news/rss',   label: 'Adventisten' },
+        ];
+        const CORS_PROXY = 'https://corsproxy.io/?url=';
+        const DISPLAY_MS = 30000;
+        const MAX        = 15;
         let articles = [], current = 0, countdownInterval = null;
 
-        // --- Fullscreen ---
         document.getElementById('fs-btn').addEventListener('click', () => {
           if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
           else document.exitFullscreen().catch(()=>{});
@@ -300,14 +160,12 @@ export default function Home() {
           window.removeEventListener('click', tryFs);
         }, { once: true });
 
-        // --- Clock ---
         function updateClock() {
           document.getElementById('clock').textContent =
             new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
         }
         setInterval(updateClock, 1000); updateClock();
 
-        // --- Weather ---
         async function fetchWeather() {
           try {
             const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.405&current=temperature_2m,weathercode&timezone=Europe%2FBerlin');
@@ -334,7 +192,6 @@ export default function Home() {
         }
         fetchWeather(); setInterval(fetchWeather, 10*60*1000);
 
-        // --- QR code ---
         function waitForQR(cb) {
           if (window.QRCode) { cb(window.QRCode); return; }
           const t = setInterval(() => { if (window.QRCode) { clearInterval(t); cb(window.QRCode); } }, 200);
@@ -348,7 +205,6 @@ export default function Home() {
           });
         }
 
-        // --- Countdown ---
         function startCountdown() {
           if (countdownInterval) clearInterval(countdownInterval);
           let secs = Math.round(DISPLAY_MS / 1000);
@@ -361,35 +217,51 @@ export default function Home() {
           }, 1000);
         }
 
-        // --- RSS ---
-        async function fetchFeed() {
-          const res = await fetch(LOCAL_PROXY, {signal: AbortSignal.timeout(10000)});
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          const text = await res.text();
-          if (!text.includes('<item')) throw new Error('Kein RSS-Inhalt');
-          return text;
+        async function fetchOneFeed(feedUrl) {
+          try {
+            const res = await fetch(CORS_PROXY + encodeURIComponent(feedUrl), {
+              signal: AbortSignal.timeout(10000),
+            });
+            if (!res.ok) return '';
+            return await res.text();
+          } catch { return ''; }
         }
 
-        function parseRSS(xml) {
+        async function fetchFeed() {
+          const xmls = await Promise.all(FEEDS.map(f => fetchOneFeed(f.url)));
+          let all = [];
+          FEEDS.forEach((f, i) => {
+            if (xmls[i] && xmls[i].includes('<item')) {
+              all = all.concat(parseRSSItems(xmls[i], f.label));
+            }
+          });
+          if (all.length === 0) throw new Error('Kein RSS-Inhalt');
+          all.sort((a,b) => (b.rawDate||0) - (a.rawDate||0));
+          return all.slice(0, MAX);
+        }
+
+        function parseRSSItems(xml, sourceLabel) {
           const doc = new DOMParser().parseFromString(xml, 'text/xml');
-          return Array.from(doc.querySelectorAll('item')).slice(0, MAX).map(item => {
+          return Array.from(doc.querySelectorAll('item')).map(item => {
             const title   = item.querySelector('title')?.textContent?.trim() || '';
             const rawDesc = item.querySelector('description')?.textContent || '';
             const desc    = stripHTML(rawDesc);
             const pubDate = item.querySelector('pubDate')?.textContent || '';
-            const cat     = item.querySelector('category')?.textContent?.trim() || 'News';
+            const cat     = item.querySelector('category')?.textContent?.trim() || sourceLabel;
             const link    = item.querySelector('link')?.textContent?.trim() || '';
             let img = '';
             const enc = item.querySelector('enclosure');
             if (enc) img = enc.getAttribute('url') || '';
             if (!img) { const t = item.querySelector('thumbnail'); if(t) img = t.getAttribute('url') || t.textContent?.trim() || ''; }
             if (!img) { const m = rawDesc.match(/<img[^>]+src=["']([^"']+)["']/i); if(m) img = m[1]; }
+            const rawDate = pubDate ? new Date(pubDate).getTime() : 0;
             const date = pubDate ? new Date(pubDate).toLocaleDateString('de-DE', {weekday:'long',day:'2-digit',month:'long',year:'numeric'}) : '';
-            return {title, desc, date, cat, img, link};
+            return {title, desc, date, rawDate, cat, img, link};
           });
         }
+        function parseRSS(xml) { return parseRSSItems(xml, 'News'); }
 
-        function stripHTML(h) { const d = document.createElement('div'); d.innerHTML = h; return (d.textContent||d.innerText||'').replace(/\\s+/g,' ').trim(); }
+        function stripHTML(h) { const d = document.createElement('div'); d.innerHTML = h; return (d.textContent||d.innerText||'').replace(/\s+/g,' ').trim(); }
         function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
         function buildSlides() {
@@ -463,16 +335,14 @@ export default function Home() {
 
         async function refresh() {
           try {
-            const xml = await fetchFeed();
-            const fresh = parseRSS(xml);
+            const fresh = await fetchFeed();
             if (fresh.length) { articles = fresh; buildSlides(); buildDots(); buildTicker(); showSlide(current % articles.length); }
           } catch(e) { console.warn('Refresh:', e); }
         }
 
         (async () => {
           try {
-            const xml = await fetchFeed();
-            articles = parseRSS(xml);
+            articles = await fetchFeed();
             if (!articles.length) throw new Error('Feed leer.');
             buildSlides(); buildDots(); buildTicker();
             document.getElementById('loading').style.display = 'none';
@@ -481,7 +351,8 @@ export default function Home() {
             setInterval(refresh, 5*60*1000);
           } catch(e) {
             document.getElementById('spinner').style.display = 'none';
-            document.getElementById('loading-msg').textContent = 'Fehler: ' + e.message;
+            document.getElementById('loading-msg').textContent = 'Feed nicht erreichbar – wird erneut versucht.';
+            setTimeout(() => location.reload(), 60000);
           }
         })();
       `}} />
