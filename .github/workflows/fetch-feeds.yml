@@ -14,7 +14,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Fetch feeds
-        run: python3 scripts/fetch_feeds.py
+        run: |
+          set -x
+          python3 scripts/fetch_feeds.py || true
+          cat public/feed.json
 
       - name: Commit feed.json
         run: |
