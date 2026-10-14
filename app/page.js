@@ -146,7 +146,12 @@ export default function Home() {
           { url: 'https://www.apd.info/news/rss',               label: 'APD' },
           { url: 'https://adventisten.de/aktuelles/news/rss',   label: 'Adventisten' },
         ];
-        const CORS_PROXY = 'https://corsproxy.io/?url=';
+        // Mehrere CORS-Proxies als Fallback-Kette
+        const CORS_PROXIES = [
+          url => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
+          url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+          url => 'https://cors-anywhere.herokuapp.com/' + url,
+        ];
         const DISPLAY_MS = 30000;
         const MAX        = 15;
         let articles = [], current = 0, countdownInterval = null;
@@ -218,13 +223,18 @@ export default function Home() {
         }
 
         async function fetchOneFeed(feedUrl) {
-          try {
-            const res = await fetch(CORS_PROXY + encodeURIComponent(feedUrl), {
-              signal: AbortSignal.timeout(10000),
-            });
-            if (!res.ok) return '';
-            return await res.text();
-          } catch { return ''; }
+          for (const proxyFn of CORS_PROXIES) {
+            try {
+              const ctrl = new AbortController();
+              const tid = setTimeout(() => ctrl.abort(), 10000);
+              const res = await fetch(proxyFn(feedUrl), { signal: ctrl.signal });
+              clearTimeout(tid);
+              if (!res.ok) continue;
+              const txt = await res.text();
+              if (txt && txt.includes('<item')) return txt;
+            } catch(e) { /* nächster Proxy */ }
+          }
+          return '';
         }
 
         async function fetchFeed() {
