@@ -142,7 +142,7 @@ export default function Home() {
       </div>
 
       <script dangerouslySetInnerHTML={{ __html: `
-        const LOCAL_PROXY = '/api/rss';
+        const FEED_URL = '/feed.json';
         const DISPLAY_MS = 30000;
         const MAX        = 15;
         let articles = [], current = 0, countdownInterval = null;
@@ -215,15 +215,17 @@ export default function Home() {
 
         async function fetchFeed() {
           const ctrl = new AbortController();
-          const tid = setTimeout(() => ctrl.abort(), 15000);
-          const res = await fetch(LOCAL_PROXY, { signal: ctrl.signal });
+          const tid = setTimeout(() => ctrl.abort(), 10000);
+          const res = await fetch(FEED_URL + '?t=' + Date.now(), { signal: ctrl.signal });
           clearTimeout(tid);
-          if (!res.ok) throw new Error('Proxy ' + res.status);
-          const xml = await res.text();
-          if (!xml.includes('<item')) throw new Error('Kein RSS-Inhalt');
-          const items = parseRSSItems(xml, 'News');
-          if (!items.length) throw new Error('Feed leer');
-          return items.slice(0, MAX);
+          if (!res.ok) throw new Error('Feed ' + res.status);
+          const data = await res.json();
+          if (!data.items || !data.items.length) throw new Error('Feed leer');
+          // Datums-Formatierung hinzufügen
+          return data.items.slice(0, MAX).map(a => ({
+            ...a,
+            date: a.pubDate ? new Date(a.pubDate).toLocaleDateString('de-DE', {weekday:'long',day:'2-digit',month:'long',year:'numeric'}) : '',
+          }));
         }
 
         function parseRSSItems(xml, sourceLabel) {
