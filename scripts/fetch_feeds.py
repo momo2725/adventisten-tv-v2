@@ -1,4 +1,4 @@
-import urllib.request, json, re, datetime, sys
+import subprocess, json, re, datetime, sys, os
 
 FEEDS = [
     ("https://www.apd.info/news/rss", "APD"),
@@ -6,19 +6,20 @@ FEEDS = [
 ]
 
 def fetch(url):
-    req = urllib.request.Request(url, headers={
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
-        "Accept": "text/xml, application/rss+xml, */*",
-        "Accept-Language": "de-DE,de;q=0.9",
-    })
-    try:
-        with urllib.request.urlopen(req, timeout=15) as r:
-            data = r.read().decode("utf-8", errors="replace")
-            print(f"OK {url}: {len(data)} bytes")
-            return data
-    except Exception as e:
-        print(f"ERROR {url}: {e}", file=sys.stderr)
-        return ""
+    cmd = [
+        "curl", "-sS", "--max-time", "20",
+        "-H", "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+        "-H", "Accept: text/xml, application/rss+xml, application/xml, */*",
+        "-H", "Accept-Language: de-DE,de;q=0.9,en;q=0.8",
+        "-H", "Accept-Encoding: gzip, deflate, br",
+        "-H", "Connection: keep-alive",
+        "-H", "Referer: https://www.google.com/",
+        "--compressed",
+        url
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    print(f"curl {url}: returncode={result.returncode}, bytes={len(result.stdout)}, stderr={result.stderr[:100]}")
+    return result.stdout if result.returncode == 0 else ""
 
 def get(xml, tag):
     m = re.search(r'<' + tag + r'[^>]*><!\[CDATA\[([\s\S]*?)\]\]></' + tag + r'>|<' + tag + r'[^>]*>([^<]*)</' + tag + r'>', xml)
@@ -58,7 +59,11 @@ result = {
     "updated": datetime.datetime.utcnow().isoformat() + "Z",
     "items": all_items[:15]
 }
+
+os.makedirs("public", exist_ok=True)
 with open("public/feed.json", "w", encoding="utf-8") as f:
     json.dump(result, f, ensure_ascii=False, indent=2)
 
 print(f"Saved {len(result['items'])} items to public/feed.json")
+if not result['items']:
+    sys.exit(1)
