@@ -142,10 +142,22 @@ export default function Home() {
       </div>
 
       <script dangerouslySetInnerHTML={{ __html: `
-        const FEED_URL = '/feed.json';
+        const FEED_URL   = '/feed.json';
         const DISPLAY_MS = 30000;
         const MAX        = 15;
         let articles = [], current = 0, countdownInterval = null;
+
+        const FEEDS = [
+          { url: 'https://www.apd.info/news/rss',                label: 'APD' },
+          { url: 'https://adventisten.de/aktuelles/news/rss',    label: 'Adventisten' },
+        ];
+
+        // CORS-Proxy-Kette: Browser probiert alle der Reihe nach
+        const PROXIES = [
+          (u) => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
+          (u) => 'https://api.allorigins.win/get?url=' + encodeURIComponent(u),
+          (u) => 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(u),
+        ];
 
         document.getElementById('fs-btn').addEventListener('click', () => {
           if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
@@ -213,23 +225,18 @@ export default function Home() {
           }, 1000);
         }
 
-        async function fetchFeed() {
-          const ctrl = new AbortController();
-          const tid = setTimeout(() => ctrl.abort(), 10000);
-          const res = await fetch(FEED_URL + '?t=' + Date.now(), { signal: ctrl.signal });
-          clearTimeout(tid);
-          if (!res.ok) throw new Error('Feed ' + res.status);
-          const data = await res.json();
-          if (!data.items || !data.items.length) throw new Error('Feed leer');
-          // Datums-Formatierung hinzufügen
-          return data.items.slice(0, MAX).map(a => ({
-            ...a,
-            date: a.pubDate ? new Date(a.pubDate).toLocaleDateString('de-DE', {weekday:'long',day:'2-digit',month:'long',year:'numeric'}) : '',
-          }));
+        function stripHTML(h) { const d = document.createElement('div'); d.innerHTML = h; return (d.textContent||d.innerText||'').replace(/\\s+/g,' ').trim(); }
+        function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+        function formatDate(pubDate) {
+          if (!pubDate) return '';
+          try { return new Date(pubDate).toLocaleDateString('de-DE', {weekday:'long',day:'2-digit',month:'long',year:'numeric'}); }
+          catch(e) { return pubDate; }
         }
 
-        function parseRSSItems(xml, sourceLabel) {
+        function parseRSSXML(xml, sourceLabel) {
           const doc = new DOMParser().parseFromString(xml, 'text/xml');
+          if (doc.querySelector('parsererror')) return [];
           return Array.from(doc.querySelectorAll('item')).map(item => {
             const title   = item.querySelector('title')?.textContent?.trim() || '';
             const rawDesc = item.querySelector('description')?.textContent || '';
@@ -243,14 +250,98 @@ export default function Home() {
             if (!img) { const t = item.querySelector('thumbnail'); if(t) img = t.getAttribute('url') || t.textContent?.trim() || ''; }
             if (!img) { const m = rawDesc.match(/<img[^>]+src=["']([^"']+)["']/i); if(m) img = m[1]; }
             const rawDate = pubDate ? new Date(pubDate).getTime() : 0;
-            const date = pubDate ? new Date(pubDate).toLocaleDateString('de-DE', {weekday:'long',day:'2-digit',month:'long',year:'numeric'}) : '';
-            return {title, desc, date, rawDate, cat, img, link};
-          });
+            return { title, desc, date: formatDate(pubDate), pubDate, rawDate, cat, img, link };
+          }).filter(a => a.title);
         }
-        function parseRSS(xml) { return parseRSSItems(xml, 'News'); }
 
-        function stripHTML(h) { const d = document.createElement('div'); d.innerHTML = h; return (d.textContent||d.innerText||'').replace(/\s+/g,' ').trim(); }
-        function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        function parseRSS2JSON(data, sourceLabel) {
+          if (data.status !== 'ok' || !data.items) return [];
+          return data.items.map(item => {
+            const pubDate = item.pubDate || '';
+            return {
+              title: item.title || '',
+              desc: stripHTML(item.description || item.content || ''),
+              date: formatDate(pubDate),
+              pubDate,
+              rawDate: pubDate ? new Date(pubDate).getTime() : 0,
+              cat: (item.categories && item.categories[0]) || sourceLabel,
+              img: item.thumbnail || (item.enclosure && item.enclosure.link) || '',
+              link: item.link || '',
+            };
+          }).filter(a => a.title);
+        }
+
+        async function fetchViaProxy(proxyUrl, proxyIdx, sourceLabel) {
+          const ctrl = new AbortController();
+          const tid = setTimeout(() => ctrl.abort(), 12000);
+          try {
+            const res = await fetch(proxyUrl, { signal: ctrl.signal });
+            clearTimeout(tid);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            if (proxyIdx === 2) {
+              const data = await res.json();
+              return parseRSS2JSON(data, sourceLabel);
+            } else if (proxyIdx === 1) {
+              const data = await res.json();
+              if (!data.contents) return [];
+              return parseRSSXML(data.contents, sourceLabel);
+            } else {
+              const xml = await res.text();
+              return parseRSSXML(xml, sourceLabel);
+            }
+          } catch(e) {
+            clearTimeout(tid);
+            throw e;
+          }
+        }
+
+        async function fetchOneFeed(feedUrl, sourceLabel) {
+          for (let i = 0; i < PROXIES.length; i++) {
+            const proxyUrl = PROXIES[i](feedUrl);
+            try {
+              const items = await fetchViaProxy(proxyUrl, i, sourceLabel);
+              if (items.length > 0) {
+                console.log('[ADV] Proxy', i, 'OK:', sourceLabel, items.length, 'items');
+                return items;
+              }
+            } catch(e) {
+              console.warn('[ADV] Proxy', i, 'fehlgeschlagen für', sourceLabel, ':', e.message);
+            }
+          }
+          return [];
+        }
+
+        async function fetchFeed() {
+          // 1) Versuche statische feed.json (GitHub Actions)
+          try {
+            const ctrl = new AbortController();
+            const tid = setTimeout(() => ctrl.abort(), 8000);
+            const res = await fetch(FEED_URL + '?t=' + Date.now(), { signal: ctrl.signal });
+            clearTimeout(tid);
+            if (res.ok) {
+              const data = await res.json();
+              if (data.items && data.items.length > 0) {
+                console.log('[ADV] Static feed.json OK:', data.items.length, 'items');
+                return data.items.slice(0, MAX).map(a => ({
+                  ...a, date: a.date || formatDate(a.pubDate),
+                }));
+              }
+              console.log('[ADV] Static feed.json leer — Fallback auf Client-Side fetch');
+            }
+          } catch(e) {
+            console.warn('[ADV] Static feed.json:', e.message);
+          }
+
+          // 2) Fallback: Client-Side via CORS-Proxy
+          const allItems = [];
+          for (const { url, label } of FEEDS) {
+            const items = await fetchOneFeed(url, label);
+            allItems.push(...items);
+          }
+          if (allItems.length === 0) throw new Error('Alle Quellen nicht erreichbar');
+          allItems.sort((a, b) => (b.rawDate || 0) - (a.rawDate || 0));
+          return allItems.slice(0, MAX);
+        }
 
         function buildSlides() {
           const stage = document.getElementById('stage');
@@ -325,7 +416,7 @@ export default function Home() {
           try {
             const fresh = await fetchFeed();
             if (fresh.length) { articles = fresh; buildSlides(); buildDots(); buildTicker(); showSlide(current % articles.length); }
-          } catch(e) { console.warn('Refresh:', e); }
+          } catch(e) { console.warn('[ADV] Refresh:', e); }
         }
 
         (async () => {
